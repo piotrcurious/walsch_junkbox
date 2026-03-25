@@ -88,20 +88,22 @@ void loop() {
   }
 
   // Find the base frequency and phase of the signals by finding the maximum absolute value in the transformed signals
-  int max0 = 0; // Initialize the maximum value for signal 0
-  int max1 = 0; // Initialize the maximum value for signal 1
+  int current_max0 = 0; // Initialize the maximum value for signal 0
+  int current_max1 = 0; // Initialize the maximum value for signal 1
+  freq0 = 0;
+  freq1 = 0;
   for (int i = 0; i < BUFFER_SIZE; i++) { // Loop through the buffer indices
-    if (abs(signal0[i]) > abs(max0)) { // If the absolute value of the signal 0 is greater than the current maximum
-      max0 = signal0[i]; // Update the maximum value
+    if (abs(signal0[i]) > abs(current_max0)) { // If the absolute value of the signal 0 is greater than the current maximum
+      current_max0 = signal0[i]; // Update the maximum value
       freq0 = i; // Update the frequency index
-      phase0 = (max0 > 0) ? 0 : 180; // Update the phase angle (0 or 180 degrees)
     }
-    if (abs(signal1[i]) > abs(max1)) { // If the absolute value of the signal 1 is greater than the current maximum
-      max1 = signal1[i]; // Update the maximum value
+    if (abs(signal1[i]) > abs(current_max1)) { // If the absolute value of the signal 1 is greater than the current maximum
+      current_max1 = signal1[i]; // Update the maximum value
       freq1 = i; // Update the frequency index
-      phase1 = (max1 > 0) ? 0 : 180; // Update the phase angle (0 or 180 degrees)
     }
   }
+  phase0 = (current_max0 >= 0) ? 0 : 180; // Update the phase angle (0 or 180 degrees)
+  phase1 = (current_max1 >= 0) ? 0 : 180; // Update the phase angle (0 or 180 degrees)
 
   // Calculate the correlation coefficient between the signals using the Pearson formula
   float sum0 = 0; // Initialize the sum of signal 0
@@ -120,7 +122,8 @@ void loop() {
   }
   mean0 = sum0 / BUFFER_SIZE; // Calculate the mean of signal 0
   mean1 = sum1 / BUFFER_SIZE; // Calculate the mean of signal 1
-  correlation = (sum01 - BUFFER_SIZE * mean0 * mean1) / sqrt((sum00 - BUFFER_SIZE * mean0 * mean0) * (sum11 - BUFFER_SIZE * mean1 * mean1)); // Calculate the correlation coefficient
+  float denominator = sqrt((sum00 - BUFFER_SIZE * mean0 * mean0) * (sum11 - BUFFER_SIZE * mean1 * mean1));
+  correlation = (denominator != 0) ? (sum01 - BUFFER_SIZE * mean0 * mean1) / denominator : 0; // Calculate the correlation coefficient
 
   // Print the frequency and phase of the signals and the correlation coefficient to the serial monitor
   Serial.print("Frequency of signal 0: ");
