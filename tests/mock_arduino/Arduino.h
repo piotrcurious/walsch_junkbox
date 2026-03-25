@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <map>
 #include <cstdlib>
+#include <sstream>
 
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
@@ -46,6 +47,7 @@ struct MockSignal {
     float freq;
     float phase;
     float amp;
+    float offset;
 };
 
 extern std::map<uint8_t, std::vector<MockSignal>> mock_signals_per_pin;
@@ -58,17 +60,19 @@ inline int analogRead(uint8_t pin) {
     if (mock_signals_per_pin.count(pin)) {
         for (auto& s : mock_signals_per_pin[pin]) {
             float arg = 2.0f * (float)PI * s.freq * t + s.phase;
+            float sample = 0;
             switch(s.type) {
                 case SINE:
-                    val += s.amp * std::sin(arg);
+                    sample = s.amp * std::sin(arg);
                     break;
                 case SQUARE:
-                    val += s.amp * (std::sin(arg) >= 0 ? 1.0f : -1.0f);
+                    sample = s.amp * (std::sin(arg) >= 0 ? 1.0f : -1.0f);
                     break;
                 case SAWTOOTH:
-                    val += s.amp * (2.0f * (arg / (2.0f * (float)PI) - std::floor(0.5f + arg / (2.0f * (float)PI))));
+                    sample = s.amp * (2.0f * (arg / (2.0f * (float)PI) - std::floor(0.5f + arg / (2.0f * (float)PI))));
                     break;
             }
+            val += sample + s.offset;
         }
     }
     if (mock_noise_per_pin.count(pin)) {
@@ -76,7 +80,6 @@ inline int analogRead(uint8_t pin) {
     }
 
     current_micros += 100; // Simulate ADC conversion time (~100us)
-    // Normalize -1 to 1 to 0 to 4095 (assuming 12-bit ADC like ESP32)
     int result = (int)((val + 1.0f) * 2047.5f);
     if (result < 0) result = 0;
     if (result > 4095) result = 4095;
@@ -112,6 +115,28 @@ public:
   template<typename T> void print(T n) { std::cout << n; }
   template<typename T> void println(T n) { std::cout << n << std::endl; }
   void println() { std::cout << std::endl; }
+
+  int available() {
+    return (int)input_buffer.str().length() - input_ptr;
+  }
+
+  int read() {
+    if (available()) {
+        return input_buffer.str()[input_ptr++];
+    }
+    return -1;
+  }
+
+  void mock_input(const std::string& s) {
+    input_buffer.str("");
+    input_buffer.clear();
+    input_buffer << s;
+    input_ptr = 0;
+  }
+
+private:
+  std::stringstream input_buffer;
+  int input_ptr = 0;
 };
 
 extern Serial_ Serial;

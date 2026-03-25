@@ -116,5 +116,9 @@ void setup() {
 
 // The loop function runs repeatedly after the setup function is completed
 void loop() {
-  // Do nothing
+  // Slowly shift the input buffer to see dynamic changes
+  fill_input_buffer();
+  apply_walsh_hadamard();
+  visualize_frequency_matrix();
+  delay(100);
 }

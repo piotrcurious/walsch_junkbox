@@ -32,9 +32,6 @@ Adafruit_SSD1306 display(128, 64, &Wire, OLED_RST);
 int buffer_0[SAMPLE_SIZE];
 int buffer_1[SAMPLE_SIZE];
 
-// Define the buffer for the Walsh matrix
-int walsh_matrix[WALSH_SIZE][WALSH_SIZE];
-
 // Define the buffer for the correlated phase
 int phase[SAMPLE_SIZE];
 
@@ -47,20 +44,17 @@ int sample_index = 0;
 // Define a variable to store the previous micros
 unsigned long previous_micros = 0;
 
-// Define a function to generate the Walsh matrix
-void generate_walsh_matrix() {
-  // Initialize the first row and column with 1
-  for (int i = 0; i < WALSH_SIZE; i++) {
-    walsh_matrix[0][i] = 1;
-    walsh_matrix[i][0] = 1;
-  }
-  // Generate the rest of the matrix using the recursive formula
-  for (int i = 1; i < WALSH_SIZE; i *= 2) {
-    for (int j = 0; j < i; j++) {
-      for (int k = 0; k < i; k++) {
-        walsh_matrix[j + i][k] = walsh_matrix[j][k];
-        walsh_matrix[j][k + i] = walsh_matrix[j][k];
-        walsh_matrix[j + i][k + i] = -walsh_matrix[j][k];
+/**
+ * Fast Walsh-Hadamard Transform (O(N log N)).
+ */
+void fwht(long* a, int n) {
+  for (int len = 1; len < n; len <<= 1) {
+    for (int i = 0; i < n; i += 2 * len) {
+      for (int j = 0; j < len; j++) {
+        long u = a[i + j];
+        long v = a[i + len + j];
+        a[i + j] = u + v;
+        a[i + len + j] = u - v;
       }
     }
   }
@@ -72,18 +66,19 @@ void correlate_phase() {
   long transform0[WALSH_SIZE];
   long transform1[WALSH_SIZE];
 
-  // Apply Walsh transform to both buffers
-  for (int i = 0; i < WALSH_SIZE; i++) {
-    transform0[i] = 0;
-    transform1[i] = 0;
-    for (int j = 0; j < SAMPLE_SIZE; j++) {
-      transform0[i] += (long)buffer_0[j] * walsh_matrix[i][j];
-      transform1[i] += (long)buffer_1[j] * walsh_matrix[i][j];
-    }
+  // Copy buffers
+  for (int i = 0; i < SAMPLE_SIZE; i++) {
+    transform0[i] = buffer_0[i];
+    transform1[i] = buffer_1[i];
   }
+
+  // Apply Fast Walsh-Hadamard Transform
+  fwht(transform0, WALSH_SIZE);
+  fwht(transform1, WALSH_SIZE);
 
   // Calculate cross-correlation in the transform domain
   for (int i = 0; i < WALSH_SIZE; i++) {
+    // Scaled correlation to fit in int
     phase[i] = (transform0[i] * transform1[i]) / (SAMPLE_SIZE * 1000);
   }
 }
@@ -136,8 +131,6 @@ void setup() {
   Serial.begin(9600);
   // Initialize the OLED display
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-  // Generate the Walsh matrix
-  generate_walsh_matrix();
 }
 
 // The loop function runs over and over again forever

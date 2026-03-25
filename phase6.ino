@@ -70,23 +70,27 @@ void initHadamard() {
   }
 }
 
-// Function to compute the frequency vector for a signal using the Walsh system
+/**
+ * Computes the sequency (Walsh-frequency) spectrum of the input signal.
+ * sequency is the number of zero crossings in a Walsh function, analogous
+ * to frequency in Fourier analysis.
+ */
 void computeFreq(int buffer[], int freq[]) {
-  // Loop through the rows of the Walsh matrix
   for (int i = 0; i < N; i++) {
-    // Initialize the frequency value to zero
     freq[i] = 0;
-    // Loop through the columns of the Walsh matrix
     for (int j = 0; j < BUFFER_SIZE; j++) {
-      // Multiply the buffer value and the Walsh function value and add to the frequency value
       freq[i] += buffer[j] * walsh[i][j];
     }
-    // Divide the frequency value by the buffer size
     freq[i] /= BUFFER_SIZE;
   }
 }
 
-// Function to compute the phase vector for two signals using the Hadamard matrix transform
+/**
+ * Computes the dyadic cross-correlation between two sequency spectra.
+ * This uses the property that the Hadamard transform of the product of two
+ * transforms in the Walsh domain is equivalent to the logical (dyadic)
+ * convolution of the original signals.
+ */
 void computePhase(int freq0[], int freq1[], int phase_v[]) {
   // Loop through the rows of the Hadamard matrix
   for (int i = 0; i < M; i++) {

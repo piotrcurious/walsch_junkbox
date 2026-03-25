@@ -50,15 +50,8 @@ public:
       }
       std::cout << std::endl;
 
-      // Also save to a PBM for evaluation
-      static int frame_count = 0;
-      save_pbm("tests/output/last_frame.pbm"); // Always overwrite last_frame for simple evaluation
-      char buf[128];
-      std::sprintf(buf, "tests/output/frame_%04d.pbm", frame_count++);
-      // Only save every 50th frame to avoid flooding
-      if (frame_count % 50 == 0) {
-          save_pbm(buf);
-      }
+      // Save to a PBM for evaluation
+      save_pbm("tests/output/last_frame.pbm");
   }
 
   void save_pbm(const char* filename) {
