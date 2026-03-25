@@ -98,8 +98,10 @@ void loop() {
       freq1 = i;
     }
   }
-  phase0 = atan2(buffer0[freq0], buffer0[BUFFER_SIZE - freq0]);
-  phase1 = atan2(buffer1[freq1], buffer1[BUFFER_SIZE - freq1]);
+  int idx0 = (BUFFER_SIZE - freq0) % BUFFER_SIZE;
+  int idx1 = (BUFFER_SIZE - freq1) % BUFFER_SIZE;
+  phase0 = atan2((float)buffer0[freq0], (float)buffer0[idx0]);
+  phase1 = atan2((float)buffer1[freq1], (float)buffer1[idx1]);
 
   // Calculate the correlation between the phases of the signals
   correlation = cos(phase0 - phase1);
@@ -107,7 +109,7 @@ void loop() {
   // Map the frequencies and correlation to the plot coordinates
   x = map(freq0, 0, BUFFER_SIZE / 2, 0, SCREEN_WIDTH);
   y = map(freq1, 0, BUFFER_SIZE / 2, 0, SCREEN_HEIGHT);
-  correlation = map(correlation, -1, 1, 0, 255);
+  int correlation_pixel = map((long)(correlation * 100), -100, 100, 0, 255);
 
   // Print the frequencies, phases, and correlation to the serial monitor
   Serial.print("Frequency 0: ");
@@ -122,6 +124,6 @@ void loop() {
   Serial.println(correlation);
 
   // Draw a pixel on the OLED display with the plot coordinates and correlation
-  display.drawPixel(x, y, correlation);
+  display.drawPixel(x, y, correlation_pixel);
   display.display();
 }

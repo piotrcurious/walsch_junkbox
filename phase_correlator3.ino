@@ -12,7 +12,7 @@
 #define SAMPLES 64 // Number of samples per buffer
 #define FREQ 1000 // Sampling frequency in Hz
 #define PERIOD (1000000 / FREQ) // Sampling period in microseconds
-#define ORDER 6 // Order of Walsh system and Hadamard matrix
+#define ORDER 8 // Order of Walsh system and Hadamard matrix (should be power of 2)
 
 // Declare global variables for buffers, Walsh system, and Hadamard matrix
 int buffer0[SAMPLES]; // Buffer for analog input 0
@@ -141,7 +141,8 @@ void visualizeOutput() {
     // Loop through each column of the output matrix
     for (int j = 0; j < ORDER; j++) {
       // Map the output value to a brightness level between 0 and 255
-      int brightness = map(output[i][j], -SAMPLES * SAMPLES, SAMPLES * SAMPLES, 0, 255);
+      // Max possible sum is SAMPLES * 4096 * 4096
+      int brightness = map(output[i][j] / 1000000, -1000, 1000, 0, 255);
       // Draw a pixel on the display with the corresponding brightness
       display.drawPixel(16 + j * 16, 8 + i * 8, brightness);
     }

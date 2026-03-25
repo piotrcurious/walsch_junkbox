@@ -19,10 +19,6 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 int input_buffer[BUFFER_SIZE];
 int buffer_index = 0;
 
-// Define the Hadamard matrix size and the matrix array
-#define MATRIX_SIZE 64
-int hadamard_matrix[MATRIX_SIZE][MATRIX_SIZE];
-
 // Define the output buffer array
 int output_buffer[BUFFER_SIZE];
 
@@ -30,20 +26,18 @@ int output_buffer[BUFFER_SIZE];
 int max_value = 0;
 int min_value = 0;
 
-// Define a function to initialize the Hadamard matrix
-void init_hadamard_matrix() {
-  // Set the first row and column to 1
-  for (int i = 0; i < MATRIX_SIZE; i++) {
-    hadamard_matrix[0][i] = 1;
-    hadamard_matrix[i][0] = 1;
-  }
-  // Use the recursive formula to fill the rest of the matrix
-  for (int n = 1; n < MATRIX_SIZE; n *= 2) {
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < n; j++) {
-        hadamard_matrix[i + n][j] = hadamard_matrix[i][j];
-        hadamard_matrix[i][j + n] = hadamard_matrix[i][j];
-        hadamard_matrix[i + n][j + n] = -hadamard_matrix[i][j];
+/**
+ * Performs Fast Walsh-Hadamard Transform (FWHT).
+ * O(N log N) complexity instead of O(N^2).
+ */
+void fwht(int* a, int n) {
+  for (int len = 1; len < n; len <<= 1) {
+    for (int i = 0; i < n; i += 2 * len) {
+      for (int j = 0; j < len; j++) {
+        int u = a[i + j];
+        int v = a[i + len + j];
+        a[i + j] = u + v;
+        a[i + len + j] = u - v;
       }
     }
   }
@@ -51,24 +45,20 @@ void init_hadamard_matrix() {
 
 // Define a function to perform the Hadamard transform on the input buffer
 void hadamard_transform() {
-  // Reset the output buffer, the maximum and minimum values
+  // Copy input to output buffer
   for (int i = 0; i < BUFFER_SIZE; i++) {
-    output_buffer[i] = 0;
+    output_buffer[i] = input_buffer[i];
   }
-  max_value = 0;
-  min_value = 0;
-  // Multiply the input buffer by the Hadamard matrix and store the result in the output buffer
-  for (int i = 0; i < BUFFER_SIZE; i++) {
-    for (int j = 0; j < BUFFER_SIZE; j++) {
-      output_buffer[i] += input_buffer[j] * hadamard_matrix[i][j];
-    }
-    // Update the maximum and minimum values
-    if (output_buffer[i] > max_value) {
-      max_value = output_buffer[i];
-    }
-    if (output_buffer[i] < min_value) {
-      min_value = output_buffer[i];
-    }
+
+  // Apply Fast Walsh-Hadamard Transform
+  fwht(output_buffer, BUFFER_SIZE);
+
+  // Update max/min for visualization
+  max_value = output_buffer[0];
+  min_value = output_buffer[0];
+  for (int i = 1; i < BUFFER_SIZE; i++) {
+    if (output_buffer[i] > max_value) max_value = output_buffer[i];
+    if (output_buffer[i] < min_value) min_value = output_buffer[i];
   }
 }
 
@@ -81,7 +71,7 @@ void visualize_output() {
   // Draw a vertical line at the left of the display
   display.drawLine(0, 0, 0, SCREEN_HEIGHT - 1, WHITE);
   // Calculate the scaling factor for the output buffer values
-  float scale = (float)(SCREEN_HEIGHT / 2) / (max_value - min_value);
+  float scale = (max_value != min_value) ? (float)(SCREEN_HEIGHT / 2) / (max_value - min_value) : 1.0;
   // Draw the output buffer values as bars on the display
   for (int i = 0; i < BUFFER_SIZE; i++) {
     int x = i * 2 + 1; // The x coordinate of the bar
@@ -112,8 +102,6 @@ void setup() {
     Serial.println("OLED display initialization failed");
     while (true);
   }
-  // Initialize the Hadamard matrix
-  init_hadamard_matrix();
 }
 
 // Define the loop function
