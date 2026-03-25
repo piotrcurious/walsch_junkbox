@@ -86,9 +86,10 @@ void visualize_frequency_matrix() {
   for (int i = 0; i < MATRIX_SIZE; i++) {
     for (int j = 0; j < MATRIX_SIZE; j++) {
       // Map the matrix element value to a brightness value between 0 and 255
-      int brightness = map((long)(frequency_matrix[i][j] * 100), -100, 100, 0, 255);
+      // Walsh-Hadamard output can be large, use a wider range
+      int brightness = map((long)(frequency_matrix[i][j] * 10), -1000, 1000, 0, 255);
       // Draw a pixel on the display with the corresponding brightness
-      display.drawPixel(j * 8, i * 4 + 16, brightness);
+      display.drawPixel(j * 8, i * 4 + 16, (brightness > 127) ? SSD1306_WHITE : SSD1306_BLACK);
     }
   }
   // Display the buffer on the screen

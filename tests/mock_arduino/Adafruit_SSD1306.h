@@ -7,6 +7,8 @@
 #include <fstream>
 #include <string>
 #include <sys/stat.h>
+#include <iostream>
+#include <cstdio>
 
 #define SSD1306_SWITCHCAPVCC 0x2
 #define SSD1306_WHITE 1
@@ -34,12 +36,34 @@ public:
   }
 
   void display() {
-      // Create output directory if it doesn't exist
+      // Print the frame to stdout in a compact hex format for the test runner to capture
+      std::cout << "DISPLAY_FRAME: ";
+      for (int i = 0; i < (_width * _height + 7) / 8; ++i) {
+          uint8_t b = 0;
+          for (int bit = 0; bit < 8; ++bit) {
+              int idx = i * 8 + bit;
+              if (idx < _width * _height && buffer[idx]) {
+                  b |= (1 << bit);
+              }
+          }
+          std::printf("%02X", b);
+      }
+      std::cout << std::endl;
+
+      // Also save to a PBM for evaluation
+      static int frame_count = 0;
+      save_pbm("tests/output/last_frame.pbm"); // Always overwrite last_frame for simple evaluation
+      char buf[128];
+      std::sprintf(buf, "tests/output/frame_%04d.pbm", frame_count++);
+      // Only save every 50th frame to avoid flooding
+      if (frame_count % 50 == 0) {
+          save_pbm(buf);
+      }
+  }
+
+  void save_pbm(const char* filename) {
       mkdir("tests", 0777);
       mkdir("tests/output", 0777);
-
-      static int frame_count = 0;
-      std::string filename = "tests/output/display_output_" + std::to_string(frame_count++) + ".pbm";
       std::ofstream f(filename);
       if (f.is_open()) {
           f << "P1\n" << _width << " " << _height << "\n";

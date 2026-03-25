@@ -161,9 +161,10 @@ void loop() {
   display.drawLine(0, 31, 127, 31, SSD1306_WHITE); // Draw a horizontal line to separate the text and the plot
   display.drawLine(63, 31, 63, 63, SSD1306_WHITE); // Draw a vertical line to mark the origin of the plot
   for (int i = 0; i < BUFFER_SIZE; i++) { // Loop through the buffer indices
-    int x = map(signal0[i], -1024, 1024, 0, 127); // Map the signal 0 to the x-axis of the plot
-    int y = map(signal1[i], -1024, 1024, 31, 63); // Map the signal 1 to the y-axis of the plot
-    display.drawPixel(x, y, SSD1306_WHITE); // Draw a pixel at the corresponding coordinates
+    // Max signal is roughly 64 * 4096 = 262144, but let's use a smaller range for visibility
+    int x_pix = map(signal0[i], -131072, 131072, 0, 127); // Map the signal 0 to the x-axis of the plot
+    int y_pix = map(signal1[i], -131072, 131072, 31, 63); // Map the signal 1 to the y-axis of the plot
+    display.drawPixel(x_pix, y_pix, SSD1306_WHITE); // Draw a pixel at the corresponding coordinates
   }
   display.display(); // Display the buffer on the screen
   delay(1000); // Wait for 1 second

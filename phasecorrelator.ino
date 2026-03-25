@@ -68,18 +68,23 @@ void generate_walsh_matrix() {
 
 // Define a function to correlate the phase of the base frequency
 void correlate_phase() {
-  // Loop through the sample size
-  for (int i = 0; i < SAMPLE_SIZE; i++) {
-    // Initialize the phase to zero
-    long sum = 0;
-    // Loop through the Walsh matrix size
-    for (int j = 0; j < WALSH_SIZE; j++) {
-      // Multiply the buffers by the Walsh matrix and add to the phase
-      sum += buffer_0[i] * walsh_matrix[j][i];
-      sum += buffer_1[i] * walsh_matrix[j][i];
+  // Create temporary arrays for transformed results
+  long transform0[WALSH_SIZE];
+  long transform1[WALSH_SIZE];
+
+  // Apply Walsh transform to both buffers
+  for (int i = 0; i < WALSH_SIZE; i++) {
+    transform0[i] = 0;
+    transform1[i] = 0;
+    for (int j = 0; j < SAMPLE_SIZE; j++) {
+      transform0[i] += (long)buffer_0[j] * walsh_matrix[i][j];
+      transform1[i] += (long)buffer_1[j] * walsh_matrix[i][j];
     }
-    // Normalize the phase by dividing by the Walsh matrix size
-    phase[i] = sum / WALSH_SIZE;
+  }
+
+  // Calculate cross-correlation in the transform domain
+  for (int i = 0; i < WALSH_SIZE; i++) {
+    phase[i] = (transform0[i] * transform1[i]) / (SAMPLE_SIZE * 1000);
   }
 }
 
@@ -115,8 +120,8 @@ void plot_on_display() {
   // Loop through the sample size / 2
   for (int i = 0; i < SAMPLE_SIZE / 2; i++) {
     // Map the phase and frequency values to the display height
-    int phase_y = map(phase[i], -1024, 1024, 63, 8);
-    int freq_y = map(freq[i], 0, 1024, 63, 8);
+    int phase_y = map(phase[i], -1000000, 1000000, 63, 8);
+    int freq_y = map(freq[i], -2048, 2048, 63, 8);
     // Draw a vertical line for each value
     display.drawFastVLine(i, phase_y, 63 - phase_y, WHITE);
     display.drawFastVLine(i + 64, freq_y, 63 - freq_y, WHITE);

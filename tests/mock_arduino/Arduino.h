@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <map>
+#include <cstdlib>
 
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
@@ -26,6 +27,10 @@
 
 #define WHITE 1
 #define BLACK 0
+
+// ESP32 Analog Pins
+#define A0 36
+#define A1 39
 
 typedef uint8_t byte;
 typedef bool boolean;

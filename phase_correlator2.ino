@@ -94,7 +94,7 @@ void correlateBuffers() {
       // Loop through the samples
       for (int k = 0; k < SAMPLES; k++) {
         // Multiply the buffers by the corresponding Walsh coefficients and add them to the correlation value
-        correlation[i][j] += buffer0[k] * walsh[i][k % ORDER] + buffer1[k] * walsh[j][k % ORDER];
+        correlation[i][j] += buffer0[k] * walsh[i][k % ORDER] * buffer1[k] * walsh[j][k % ORDER];
       }
       // Divide the correlation value by the number of samples
       correlation[i][j] /= SAMPLES;

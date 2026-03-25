@@ -141,7 +141,8 @@ void visualizeOutput() {
     // Loop through each column of the output matrix
     for (int j = 0; j < ORDER; j++) {
       // Map the output value to a brightness level between 0 and 255
-      int brightness = map(output[i][j], -SAMPLES * SAMPLES, SAMPLES * SAMPLES, 0, 255);
+      // Max possible sum is SAMPLES * 4096 * 4096
+      int brightness = map(output[i][j] / 1000000, -1000, 1000, 0, 255);
       // Draw a pixel on the display with the corresponding brightness
       display.drawPixel(16 + j * 16, 8 + i * 8, brightness);
     }
