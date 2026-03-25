@@ -135,7 +135,7 @@ void visualizePhase(int freq0[], int freq1[], int phase_v[]) {
   for (int i = 0; i < M; i++) {
     // Map the phase value to a pixel coordinate
     int x_coord = map(i, 0, M - 1, 1, 126);
-    int y_coord = map(phase_v[i], -1024, 1024, 62, 32); // Reasonable range for scaled phase
+    int y_coord = map(phase_v[i], -1000000, 1000000, 62, 32); // Better range for squared freq
     // Draw a pixel at the coordinate
     display.drawPixel(x_coord, y_coord, SSD1306_WHITE);
   }

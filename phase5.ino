@@ -109,7 +109,7 @@ void loop() {
   // Map the frequencies and correlation to the plot coordinates
   x = map(freq0, 0, BUFFER_SIZE / 2, 0, SCREEN_WIDTH);
   y = map(freq1, 0, BUFFER_SIZE / 2, 0, SCREEN_HEIGHT);
-  correlation = map(correlation, -1, 1, 0, 255);
+  int correlation_pixel = map((long)(correlation * 100), -100, 100, 0, 255);
 
   // Print the frequencies, phases, and correlation to the serial monitor
   Serial.print("Frequency 0: ");
@@ -124,6 +124,6 @@ void loop() {
   Serial.println(correlation);
 
   // Draw a pixel on the OLED display with the plot coordinates and correlation
-  display.drawPixel(x, y, correlation);
+  display.drawPixel(x, y, correlation_pixel);
   display.display();
 }

@@ -7,6 +7,7 @@
 #include <string>
 #include <algorithm>
 #include <cstdint>
+#include <map>
 
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
@@ -33,24 +34,48 @@ inline void pinMode(uint8_t pin, uint8_t mode) {}
 inline void digitalWrite(uint8_t pin, uint8_t val) {}
 inline int digitalRead(uint8_t pin) { return 0; }
 
+enum WaveType { SINE, SQUARE, SAWTOOTH };
+
 struct MockSignal {
+    WaveType type;
     float freq;
     float phase;
     float amp;
 };
 
-extern std::vector<MockSignal> mock_signals;
+extern std::map<uint8_t, std::vector<MockSignal>> mock_signals_per_pin;
+extern std::map<uint8_t, float> mock_noise_per_pin;
 extern uint32_t current_micros;
 
 inline int analogRead(uint8_t pin) {
     float val = 0;
     float t = current_micros / 1000000.0f;
-    for (auto& s : mock_signals) {
-        val += s.amp * std::sin(2.0f * (float)PI * s.freq * t + s.phase);
+    if (mock_signals_per_pin.count(pin)) {
+        for (auto& s : mock_signals_per_pin[pin]) {
+            float arg = 2.0f * (float)PI * s.freq * t + s.phase;
+            switch(s.type) {
+                case SINE:
+                    val += s.amp * std::sin(arg);
+                    break;
+                case SQUARE:
+                    val += s.amp * (std::sin(arg) >= 0 ? 1.0f : -1.0f);
+                    break;
+                case SAWTOOTH:
+                    val += s.amp * (2.0f * (arg / (2.0f * (float)PI) - std::floor(0.5f + arg / (2.0f * (float)PI))));
+                    break;
+            }
+        }
     }
+    if (mock_noise_per_pin.count(pin)) {
+        val += mock_noise_per_pin[pin] * ((std::rand() % 2000 - 1000) / 1000.0f);
+    }
+
     current_micros += 100; // Simulate ADC conversion time (~100us)
     // Normalize -1 to 1 to 0 to 4095 (assuming 12-bit ADC like ESP32)
-    return (int)((val + 1.0f) * 2047.5f);
+    int result = (int)((val + 1.0f) * 2047.5f);
+    if (result < 0) result = 0;
+    if (result > 4095) result = 4095;
+    return result;
 }
 
 inline void analogReadResolution(int res) {}
