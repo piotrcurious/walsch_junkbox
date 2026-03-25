@@ -124,6 +124,8 @@ void loop() {
   mean1 = sum1 / BUFFER_SIZE; // Calculate the mean of signal 1
   float var0 = sum00 - BUFFER_SIZE * mean0 * mean0;
   float var1 = sum11 - BUFFER_SIZE * mean1 * mean1;
+  if (var0 < 0) var0 = 0;
+  if (var1 < 0) var1 = 0;
   float denominator = sqrt(var0 * var1);
   correlation = (denominator > 0.0001f) ? (sum01 - BUFFER_SIZE * mean0 * mean1) / denominator : 0; // Calculate the correlation coefficient
 

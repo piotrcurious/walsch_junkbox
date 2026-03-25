@@ -1,0 +1,3 @@
+tests/output/
+*.bin
+temp_*.cpp
