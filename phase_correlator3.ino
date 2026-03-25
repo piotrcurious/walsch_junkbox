@@ -12,7 +12,7 @@
 #define SAMPLES 64 // Number of samples per buffer
 #define FREQ 1000 // Sampling frequency in Hz
 #define PERIOD (1000000 / FREQ) // Sampling period in microseconds
-#define ORDER 6 // Order of Walsh system and Hadamard matrix
+#define ORDER 8 // Order of Walsh system and Hadamard matrix (should be power of 2)
 
 // Declare global variables for buffers, Walsh system, and Hadamard matrix
 int buffer0[SAMPLES]; // Buffer for analog input 0

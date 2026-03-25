@@ -24,12 +24,12 @@
 // Declare global variables for buffers, Walsh system, Hadamard matrix, and OLED display
 int buffer0[BUFFER_SIZE]; // Buffer for analog input 0
 int buffer1[BUFFER_SIZE]; // Buffer for analog input 1
-int index = 0; // Index for buffer filling
+int buffer_index = 0; // Index for buffer filling
 int walsh[N][BUFFER_SIZE]; // Walsh system matrix
 int hadamard[M][N]; // Hadamard matrix
 int freq0[N]; // Frequency vector for signal 0
 int freq1[N]; // Frequency vector for signal 1
-int phase[N]; // Phase vector for signals 0 and 1
+int phase_vec[M]; // Phase vector for signals 0 and 1
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET); // OLED display object
 
 // Function to initialize the Walsh system matrix
@@ -87,23 +87,23 @@ void computeFreq(int buffer[], int freq[]) {
 }
 
 // Function to compute the phase vector for two signals using the Hadamard matrix transform
-void computePhase(int freq0[], int freq1[], int phase[]) {
+void computePhase(int freq0[], int freq1[], int phase_v[]) {
   // Loop through the rows of the Hadamard matrix
   for (int i = 0; i < M; i++) {
     // Initialize the phase value to zero
-    phase[i] = 0;
+    phase_v[i] = 0;
     // Loop through the columns of the Hadamard matrix
     for (int j = 0; j < N; j++) {
       // Multiply the frequency values and the Hadamard function value and add to the phase value
-      phase[i] += freq0[j] * freq1[j] * hadamard[i][j];
+      phase_v[i] += freq0[j] * freq1[j] * hadamard[i][j];
     }
     // Divide the phase value by the number of Walsh functions
-    phase[i] /= N;
+    phase_v[i] /= N;
   }
 }
 
 // Function to visualize the correlated phase along with frequency on the OLED display
-void visualizePhase(int freq0[], int freq1[], int phase[]) {
+void visualizePhase(int freq0[], int freq1[], int phase_v[]) {
   // Clear the display buffer
   display.clearDisplay();
   // Set the text color to white
@@ -134,10 +134,10 @@ void visualizePhase(int freq0[], int freq1[], int phase[]) {
   // Draw the phase plot using the output of the Hadamard matrix
   for (int i = 0; i < M; i++) {
     // Map the phase value to a pixel coordinate
-    int x = map(i, 0, M - 1, 1, 126);
-    int y = map(phase[i], -N, N, 62, 32);
+    int x_coord = map(i, 0, M - 1, 1, 126);
+    int y_coord = map(phase_v[i], -1024, 1024, 62, 32); // Reasonable range for scaled phase
     // Draw a pixel at the coordinate
-    display.drawPixel(x, y, SSD1306_WHITE);
+    display.drawPixel(x_coord, y_coord, SSD1306_WHITE);
   }
   // Display the buffer contents on the OLED
   display.display();
@@ -149,12 +149,12 @@ void fillBuffer() {
   int value0 = analogRead(A0);
   int value1 = analogRead(A1);
   // Store the values in the buffers at the current index
-  buffer0[index] = value0;
-  buffer1[index] = value1;
+  buffer0[buffer_index] = value0;
+  buffer1[buffer_index] = value1;
   // Increment the index and wrap around if necessary
-  index++;
-  if (index == BUFFER_SIZE) {
-    index = 0;
+  buffer_index++;
+  if (buffer_index == BUFFER_SIZE) {
+    buffer_index = 0;
   }
 }
 
@@ -190,9 +190,9 @@ void loop() {
   computeFreq(buffer0, freq0);
   computeFreq(buffer1, freq1);
   // Compute the phase vector for the signals using the Hadamard matrix transform
-  computePhase(freq0, freq1, phase);
+  computePhase(freq0, freq1, phase_vec);
   // Visualize the correlated phase along with frequency on the OLED display
-  visualizePhase(freq0, freq1, phase);
+  visualizePhase(freq0, freq1, phase_vec);
   // Wait for the next sampling interval
   delay(1000 / SAMPLE_RATE);
 }

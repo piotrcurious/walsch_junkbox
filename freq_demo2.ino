@@ -81,7 +81,7 @@ void visualize_output() {
   // Draw a vertical line at the left of the display
   display.drawLine(0, 0, 0, SCREEN_HEIGHT - 1, WHITE);
   // Calculate the scaling factor for the output buffer values
-  float scale = (float)(SCREEN_HEIGHT / 2) / (max_value - min_value);
+  float scale = (max_value != min_value) ? (float)(SCREEN_HEIGHT / 2) / (max_value - min_value) : 1.0;
   // Draw the output buffer values as bars on the display
   for (int i = 0; i < BUFFER_SIZE; i++) {
     int x = i * 2 + 1; // The x coordinate of the bar

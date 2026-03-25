@@ -11,15 +11,21 @@
 // Define constants for sampling and Walsh system
 #define SAMPLES 64 // Number of samples per buffer
 #define FREQUENCY 1000 // Sampling frequency in Hz
-#define ORDER 6 // Order of Walsh system (must be a power of 2)
+#define ORDER 8 // Order of Walsh system (must be a power of 2)
 
 // Create an OLED display object
 Adafruit_SSD1306 display = Adafruit_SSD1306(128, 64, &Wire);
 
+// Function prototypes
+void generateWalsh();
+void sampleInputs();
+void correlateBuffers();
+void plotCorrelation();
+
 // Declare global variables for buffers, Walsh matrix, and correlation
 float buffer0[SAMPLES]; // Buffer for analog input 0
 float buffer1[SAMPLES]; // Buffer for analog input 1
-float walsh[ORDER][ORDER]; // Walsh matrix of order 6
+float walsh[ORDER][ORDER]; // Walsh matrix of order 8
 float correlation[ORDER][ORDER]; // Correlation matrix of buffer0 and buffer1
 
 // Initialize the ESP32 and the OLED display
@@ -71,8 +77,8 @@ void sampleInputs() {
   // Loop through the samples
   for (int i = 0; i < SAMPLES; i++) {
     // Read the analog inputs and map them to [-1, 1] range
-    buffer0[i] = map(analogRead(A0), 0, 4095, -1, 1);
-    buffer1[i] = map(analogRead(A1), 0, 4095, -1, 1);
+    buffer0[i] = (float)map(analogRead(A0), 0, 4095, -100, 100) / 100.0;
+    buffer1[i] = (float)map(analogRead(A1), 0, 4095, -100, 100) / 100.0;
     // Wait for the sampling interval
     delayMicroseconds(interval);
   }
@@ -107,7 +113,7 @@ void plotCorrelation() {
   for (int i = 0; i < ORDER; i++) {
     for (int j = 0; j < ORDER; j++) {
       // Map the correlation value to [0, 63] range
-      int value = map(correlation[i][j], -1, 1, 0, 63);
+      int value = map((long)(correlation[i][j] * 100), -100, 100, 0, 255);
       // Draw a pixel on the display with the corresponding brightness
       display.drawPixel(16 + i * 16, 16 + j * 16, value);
     }

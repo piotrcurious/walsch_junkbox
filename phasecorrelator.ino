@@ -9,7 +9,7 @@
 #define OLED_RST 16
 
 // Create an object for the OLED display
-Adafruit_SSD1306 display(OLED_SDA, OLED_SCL, OLED_RST);
+Adafruit_SSD1306 display(128, 64, &Wire, OLED_RST);
 
 // Define the pins for the analog inputs
 #define ANALOG_IN_0 36
@@ -71,15 +71,15 @@ void correlate_phase() {
   // Loop through the sample size
   for (int i = 0; i < SAMPLE_SIZE; i++) {
     // Initialize the phase to zero
-    phase[i] = 0;
+    long sum = 0;
     // Loop through the Walsh matrix size
     for (int j = 0; j < WALSH_SIZE; j++) {
       // Multiply the buffers by the Walsh matrix and add to the phase
-      phase[i] += buffer_0[i] * walsh_matrix[j][i];
-      phase[i] += buffer_1[i] * walsh_matrix[j][i];
+      sum += buffer_0[i] * walsh_matrix[j][i];
+      sum += buffer_1[i] * walsh_matrix[j][i];
     }
     // Normalize the phase by dividing by the Walsh matrix size
-    phase[i] /= WALSH_SIZE;
+    phase[i] = sum / WALSH_SIZE;
   }
 }
 

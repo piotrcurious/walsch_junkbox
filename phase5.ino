@@ -98,8 +98,10 @@ void loop() {
       freq1 = i;
     }
   }
-  phase0 = atan2(buffer0[freq0], buffer0[BUFFER_SIZE - freq0]);
-  phase1 = atan2(buffer1[freq1], buffer1[BUFFER_SIZE - freq1]);
+  int idx0 = (BUFFER_SIZE - freq0) % BUFFER_SIZE;
+  int idx1 = (BUFFER_SIZE - freq1) % BUFFER_SIZE;
+  phase0 = atan2((float)buffer0[freq0], (float)buffer0[idx0]);
+  phase1 = atan2((float)buffer1[freq1], (float)buffer1[idx1]);
 
   // Calculate the correlation between the phases of the signals
   correlation = cos(phase0 - phase1);

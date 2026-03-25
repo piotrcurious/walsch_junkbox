@@ -11,6 +11,16 @@
 // Create an OLED display object
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
+// Function to count set bits in an integer
+int bitCount(int n) {
+  int count = 0;
+  while (n > 0) {
+    count += n & 1;
+    n >>= 1;
+  }
+  return count;
+}
+
 // Define the input buffer size and the frequency matrix size
 #define BUFFER_SIZE 256
 #define MATRIX_SIZE 16
@@ -76,7 +86,7 @@ void visualize_frequency_matrix() {
   for (int i = 0; i < MATRIX_SIZE; i++) {
     for (int j = 0; j < MATRIX_SIZE; j++) {
       // Map the matrix element value to a brightness value between 0 and 255
-      int brightness = map(frequency_matrix[i][j], -1, 1, 0, 255);
+      int brightness = map((long)(frequency_matrix[i][j] * 100), -100, 100, 0, 255);
       // Draw a pixel on the display with the corresponding brightness
       display.drawPixel(j * 8, i * 4 + 16, brightness);
     }
